@@ -19,6 +19,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import tempfile
 from pathlib import Path
 
 import cv2
@@ -37,8 +38,11 @@ def mujoco_principal(cx: float, cy: float, width: int, height: int) -> tuple[flo
 
 
 def panda_xml(panda_dir: Path) -> str:
-    """Menagerie panda.xml with a TCP site between the finger pads."""
-    xml = (Path(panda_dir) / "panda.xml").read_text()
+    """Menagerie panda.xml with a TCP site between the finger pads and an absolute mesh directory, so the
+    generated scene can live anywhere (the third-party checkout is never written to)."""
+    panda_dir = Path(panda_dir).resolve()
+    xml = (panda_dir / "panda.xml").read_text()
+    xml = re.sub(r'meshdir="([^"]*)"', lambda m: f'meshdir="{panda_dir / m.group(1)}"', xml, count=1)
     return re.sub(r'(<body name="hand"[^>]*>)',
                   r'\1<site name="tcp" pos="0 0 %.4f" size="0.002" rgba="0 0 0 0"/>' % TCP_OFFSET, xml, count=1)
 
@@ -59,7 +63,7 @@ def build_camera_model(panda_dir: Path, T_cam_base: np.ndarray, k: dict):
            '<light pos="0 -0.5 0" dir="0 1 1" diffuse="0.7 0.7 0.7"/>'
            '<light pos="0.5 -1 0.5" dir="-0.4 1 0.4" diffuse="0.4 0.4 0.4"/>')
     xml = xml.replace("<worldbody>", "<worldbody>" + cam, 1)
-    scene = Path(panda_dir) / "_recast_camera_scene.xml"   # written next to panda.xml so mesh paths resolve
+    scene = Path(tempfile.mkdtemp(prefix="recast_")) / "camera_scene.xml"
     scene.write_text(xml)
     m = mujoco.MjModel.from_xml_path(str(scene))
     m.vis.global_.offwidth, m.vis.global_.offheight = max(W, 640), max(H, 480)
