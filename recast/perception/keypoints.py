@@ -2,7 +2,7 @@
 
 1. On the first frame with a valid object mask, M points are chosen by farthest-point sampling over the object's
    depth points (spread over the visible surface, not clustered on texture).
-2. CoTracker follows their pixels through the clip.
+2. CoTracker follows their pixels through the clip (``--tracker lk``: Lucas-Kanade on CPU, for quick runs).
 3. A track counts as observed when CoTracker marks it visible, it lies inside the segmentation mask, and depth is
    valid there. Observed tracks are lifted to 3D and moved into the world (robot-base) frame W.
 4. Unobserved points are carried from the previous frame by the rigid transform that Kabsch alignment estimates
@@ -60,6 +60,31 @@ def track_cotracker(frames_rgb: np.ndarray, queries_uv: np.ndarray, t0: int, mod
     with torch.no_grad():
         tracks, vis = tracker(video, queries=queries, backward_tracking=True)
     return tracks[0].cpu().numpy(), vis[0].cpu().numpy() > 0.5
+
+
+def track_lk(frames_rgb: np.ndarray, queries_uv: np.ndarray, t0: int, fb_max_px: float = 2.0
+             ) -> tuple[np.ndarray, np.ndarray]:
+    """Lightweight CPU alternative to CoTracker: pyramidal Lucas-Kanade from t0 forwards and backwards, with a
+    forward-backward consistency check as the visibility estimate. Lost points keep their last position."""
+    import cv2
+
+    gray = [cv2.cvtColor(f, cv2.COLOR_RGB2GRAY) for f in frames_rgb]
+    T, M = len(gray), len(queries_uv)
+    uv, vis = np.zeros((T, M, 2), np.float32), np.zeros((T, M), bool)
+    uv[t0], vis[t0] = queries_uv, True
+    lk = dict(winSize=(21, 21), maxLevel=3, criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 30, 0.01))
+    for order in (range(t0 + 1, T), range(t0 - 1, -1, -1)):
+        prev = t0
+        for t in order:
+            p0 = uv[prev].reshape(-1, 1, 2)
+            p1, st, _ = cv2.calcOpticalFlowPyrLK(gray[prev], gray[t], p0, None, **lk)
+            pb, stb, _ = cv2.calcOpticalFlowPyrLK(gray[t], gray[prev], p1, None, **lk)
+            fb = np.linalg.norm((pb - p0).reshape(-1, 2), axis=1)
+            ok = (st[:, 0] == 1) & (stb[:, 0] == 1) & (fb < fb_max_px) & vis[prev]
+            uv[t] = np.where(ok[:, None], p1.reshape(-1, 2), uv[prev])
+            vis[t] = ok
+            prev = t
+    return uv, vis
 
 
 def lift_tracks(uv: np.ndarray, visible: np.ndarray, depths: list[np.ndarray], masks: list[np.ndarray], k: dict,
@@ -123,7 +148,7 @@ def object_state(K_t: np.ndarray, T_WE_t: np.ndarray) -> np.ndarray:
     return transform_points(invert_T(T_WE_t), K_t)
 
 
-def track_object(run: Path, num_points: int = 16, T_wc: np.ndarray | None = None) -> dict:
+def track_object(run: Path, num_points: int = 16, T_wc: np.ndarray | None = None, tracker: str = "cotracker") -> dict:
     import cv2
 
     clip = Clip(run / "clip")
@@ -132,7 +157,7 @@ def track_object(run: Path, num_points: int = 16, T_wc: np.ndarray | None = None
     t0 = next(t for t in range(len(clip)) if (masks[t] & (depths[t] > 0)).sum() >= 4 * num_points)
     queries = init_queries(depths[t0], masks[t0], clip.k, num_points)
     frames = np.stack([cv2.cvtColor(clip.rgb(i), cv2.COLOR_BGR2RGB) for i in range(len(clip))])
-    uv, vis = track_cotracker(frames, queries, t0)
+    uv, vis = track_cotracker(frames, queries, t0) if tracker == "cotracker" else track_lk(frames, queries, t0)
     T_wc = np.eye(4) if T_wc is None else T_wc
     pts_w, observed = lift_tracks(uv, vis, depths, masks, clip.k, T_wc)
     K = propagate_rigid(pts_w, observed)
@@ -140,7 +165,8 @@ def track_object(run: Path, num_points: int = 16, T_wc: np.ndarray | None = None
     (run / "keypoints").mkdir(parents=True, exist_ok=True)
     np.savez_compressed(run / "keypoints" / "keypoints.npz", uv=uv, observed=observed, K_world=K, T_WO=poses,
                         T_wc=T_wc, init_frame=t0)
-    summary = {"num_points": num_points, "init_frame": int(t0), "observed_fraction": float(observed.mean())}
+    summary = {"num_points": num_points, "tracker": tracker, "init_frame": int(t0),
+               "observed_fraction": float(observed.mean())}
     (run / "keypoints" / "summary.json").write_text(json.dumps(summary, indent=2))
     return summary
 
@@ -150,9 +176,11 @@ def main() -> None:
     ap.add_argument("run", type=Path)
     ap.add_argument("--num-points", type=int, default=16)
     ap.add_argument("--extrinsics", type=Path, help="JSON with a 4x4 'T_world_cam' (camera-to-robot calibration)")
+    ap.add_argument("--tracker", choices=["cotracker", "lk"], default="cotracker",
+                    help="cotracker (paper, GPU) or lk (pyramidal Lucas-Kanade, CPU)")
     a = ap.parse_args()
     T_wc = np.array(json.loads(a.extrinsics.read_text())["T_world_cam"]) if a.extrinsics else None
-    print(json.dumps(track_object(a.run, a.num_points, T_wc), indent=2))
+    print(json.dumps(track_object(a.run, a.num_points, T_wc, a.tracker), indent=2))
 
 
 if __name__ == "__main__":
