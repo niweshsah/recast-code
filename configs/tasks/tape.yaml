@@ -2,8 +2,8 @@ name: tape
 instruction: "put the tape on the box"
 object_prompt: "tape roll"
 object:
-  shape: cylinder          # circular roll; curved surface rolls/slips when the grasp is off-centre
-  radius_m: 0.048
-  half_height_m: 0.024
-  mass_kg: 0.09
+  shape: cylinder          # circular roll lying flat; the curved side rolls or slips when the grasp is off-centre
+  radius_m: 0.026
+  half_height_m: 0.0125
+  mass_kg: 0.06
   friction: 0.8

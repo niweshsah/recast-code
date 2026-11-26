@@ -1,0 +1,17 @@
+# Measured scene of the recorded cube demonstration (robot-base frame, metres). Object and box poses come from
+# the first clip frame's sensor depth; the base placement is the same virtual floor placement as the edited
+# frames (no camera-to-robot calibration exists for this recording).
+camera:
+  intrinsics: {fx: 607.0767, fy: 605.9083, cx: 330.8481, cy: 240.6685, width: 640, height: 480}
+  T_base_cam:
+    - [-0.8566, 0.22142, -0.46605, 0.93999]
+    - [0.51581, 0.34405, -0.78459, 0.37053]
+    - [-0.01338, -0.91247, -0.40892, 0.23861]
+    - [0.0, 0.0, 0.0, 1.0]
+object_xy: [0.52596, 0.0398]
+object_yaw: 2.54631
+box:
+  xy: [0.74844, -0.05352]
+  size: [0.13769, 0.11095, 0.05496]
+  yaw: 2.54631
+wall_distance_m: 1.7     # along the camera's viewing direction

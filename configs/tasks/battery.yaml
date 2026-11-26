@@ -2,7 +2,8 @@ name: battery
 instruction: "put the battery on the box"
 object_prompt: "battery"
 object:
-  shape: cylinder          # small cell; needs a precise grasp and jaw opening
+  shape: cylinder          # small cell lying on its side: needs a precise grasp and jaw opening
+  lying: true
   radius_m: 0.0052
   half_height_m: 0.0222
   mass_kg: 0.012
