@@ -1,0 +1,54 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "recast"
+version = "0.1.0"
+description = "Recast: object-linked, contact-grounded robot demonstrations from human RGB-D videos"
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.10,<3.12"
+authors = [
+  { name = "Niwesh Sah" }, { name = "Rishang Yadav" }, { name = "Anish Kumar" }, { name = "Vitthal Seth" },
+]
+dependencies = [
+  "numpy>=1.24,<2.3",
+  "opencv-contrib-python>=4.9",
+  "pyyaml>=6.0",
+  "tqdm>=4.66",
+]
+
+[project.optional-dependencies]
+# GPU perception front end (WiLoR, Grounding DINO / SAM 2 / SAM 3, CoTracker, ProPainter run from scripts/setup_gpu.sh)
+perception = [
+  "torch>=2.3",
+  "torchvision>=0.18",
+  "transformers>=4.44",
+  "open3d>=0.18",
+  "trimesh>=4.4",
+  "scipy>=1.12",
+  "smplx>=0.1.28",
+  "ultralytics==8.1.34",
+  "rosbags>=0.10",
+]
+sim = ["mujoco>=3.2", "imageio>=2.34", "imageio-ffmpeg>=0.5", "pillow>=10"]
+dev = ["pytest>=8", "ruff>=0.6"]
+
+[project.scripts]
+recast = "recast.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["recast*"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+ignore = ["E731"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["gpu: needs CUDA and the perception models", "sim: needs mujoco"]

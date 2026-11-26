@@ -1,0 +1,17 @@
+# Evaluation protocol (paper Sec. IV): fixed before testing.
+rollouts: 25               # placements per configuration, from seeds 0..24, executed in the same order
+deadline_s: 60.0
+control_hz: 10
+sim_timestep: 0.002
+placement:
+  xy_jitter_m: 0.06        # object start sampled uniformly around the nominal pose
+  yaw_range_deg: 45
+success:
+  xy_tol_m: 0.03
+  z_tol_m: 0.012
+conditions:
+  in_distribution: {}
+  surface: {floor_rgba: [0.35, 0.30, 0.26, 1.0], floor_texture: checker}
+  lighting: {light_scale: 0.45, light_dir: [0.6, -0.4, -1.0]}
+  distractors: {count: 3}
+models: [original, hand_only, recast]

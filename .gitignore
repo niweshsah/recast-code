@@ -1,0 +1,26 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv*/
+.pytest_cache/
+.ruff_cache/
+.DS_Store
+
+# models, weights and licensed assets: never committed
+third_party/
+weights/
+mano/
+**/MANO_*.pkl
+*.ckpt
+*.pth
+*.pt
+*.safetensors
+
+# recordings and run outputs
+*.db3
+*.bag
+runs/
+outputs/
+data/*
+!data/sample/
+*.mp4

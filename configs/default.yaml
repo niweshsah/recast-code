@@ -1,0 +1,44 @@
+# Recast defaults. Paths are relative to the run directory given on the command line.
+camera:
+  fps: 15
+  depth_units_mm: 1.0
+
+segmentation:
+  backend: sam3            # sam3 | dino_sam2 (fallback used when SAM 3 weights are unavailable)
+  prompts: {hand: "hand", arm: "arm"}   # the object prompt comes from the task config
+  detector_stride: 3
+  detector_threshold: 0.3
+  remove_dilation_px: 8
+
+hands:
+  detector_conf: 0.3
+  min_depth_points: 200
+  icp_max_dist_m: 0.02
+  icp_min_fitness: 0.3
+
+keypoints:
+  num_points: 16           # M
+  tracker: cotracker3_offline
+
+contact:
+  eps_m: 0.01              # epsilon: hand-mesh vertex within 1 cm of the object cloud counts as contact
+  min_contacts: 3          # per group (thumb / non-thumb)
+
+phases:
+  states: [idle, approach, grasp, carry, release]
+  self_transition: 0.95
+  release_ramp_frames: 5
+
+actions:
+  blend_frames: 4          # contact <-> fingertip transition interval
+  anchor_sigma_m: 0.01     # sigma in lambda_t = exp(-r_t / sigma)
+  max_anchor_std_mm: 8.0   # carry intervals with larger T_EO variation are dropped
+
+inpainting:
+  mask_dilation_px: 4
+  subvideo_length: 80
+  fp16: true
+
+render:
+  robot: franka_emika_panda
+  tcp_offset_m: 0.1034

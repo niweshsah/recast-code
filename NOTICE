@@ -1,0 +1,9 @@
+Third-party code and models
+
+- recast/geometry.py: `visible_vertices` and `to_open3d` are adapted from Phantom
+  (https://github.com/MarionLepert/phantom), MIT License, (c) 2025 Stanford Interactive
+  Perception and Robot Learning Lab.
+- External models are not redistributed. scripts/setup_gpu.sh fetches pinned versions of
+  WiLoR, ProPainter, CoTracker, SAM 2 / SAM 3 and MuJoCo Menagerie under their own licenses.
+- MANO (https://mano.is.tue.mpg.de) is licensed separately and must be downloaded by each
+  user. It is never included in this repository.

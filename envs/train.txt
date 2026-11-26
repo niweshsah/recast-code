@@ -1,0 +1,23 @@
+# Octo fine-tuning environment (Python 3.10, separate from the perception env):
+#   uv venv -p 3.10 .venv-train
+#   uv pip install -p .venv-train -r envs/train.txt && uv pip install -p .venv-train -e .
+# Pins follow octo-models/octo@241fb35 requirements.txt.
+octo @ git+https://github.com/octo-models/octo.git@241fb3514b7c40957a86d869fecb7c7fc353f540
+dlimp @ git+https://github.com/kvablack/dlimp@5edaa4691567873d495633f2708982b42edf1972
+jax[cuda12_pip]==0.4.20
+flax==0.7.5
+optax==0.1.5
+chex==0.1.85
+distrax==0.1.5
+numpy==1.24.3
+ml_dtypes==0.2.0
+tensorflow==2.15.0
+tensorflow_datasets==4.9.2
+tensorflow_probability==0.23.0
+tensorflow_hub>=0.14.0
+tensorflow_text>=2.13.0
+tensorflow_graphics==2021.12.3
+transformers>=4.34.1
+ml_collections>=0.1.0
+einops>=0.6.1
+wandb>=0.16
