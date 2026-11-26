@@ -67,8 +67,10 @@ def main(_):
     )
     it = dataset.repeat().unbatch().shuffle(10000).batch(FLAGS.batch_size).iterator()
 
+    text_processor = pretrained.text_processor   # captured: `pretrained` is freed before training starts
+
     def process(batch):
-        batch = process_text(batch, pretrained.text_processor)
+        batch = process_text(batch, text_processor)
         del batch["dataset_name"]
         return batch
 
@@ -87,7 +89,7 @@ def main(_):
     config["model"]["heads"]["action"] = ModuleSpec.create(DiffusionActionHead, readout_key="readout_action",
                                                            use_map=False, action_horizon=FLAGS.action_horizon,
                                                            action_dim=7, n_diffusion_samples=1)
-    model = OctoModel.from_config(config, example, pretrained.text_processor, verbose=True,
+    model = OctoModel.from_config(config, example, text_processor, verbose=True,
                                   dataset_statistics=dataset.dataset_statistics)
     model = model.replace(params=merge_params(model.params, pretrained.params))   # new modules stay from scratch
     del pretrained
