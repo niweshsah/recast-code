@@ -100,7 +100,7 @@ class PhaseHMM:
         init = np.full(N_STATES, smoothing)
         for y in labels:
             init[y[0]] += 1
-            for a, b in zip(y[:-1], y[1:]):
+            for a, b in zip(y[:-1], y[1:], strict=True):
                 if not allowed[a, b]:
                     raise ValueError(f"label sequence has a forbidden transition {PHASES[a]} -> {PHASES[b]}")
                 counts[a, b] += 1

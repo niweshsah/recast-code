@@ -94,7 +94,8 @@ def grasp_from_hand(verts: np.ndarray, joints: np.ndarray, obj_pts: np.ndarray, 
         c_th, c_nt = th.mean(0), nt.mean(0)
         p, y, mode = 0.5 * (c_th + c_nt), c_nt - c_th, MODE_CONTACT
     else:
-        p, y, mode = 0.5 * (joints[THUMB_TIP] + joints[INDEX_TIP]), joints[INDEX_TIP] - joints[THUMB_TIP], MODE_FINGERTIP
+        p, mode = 0.5 * (joints[THUMB_TIP] + joints[INDEX_TIP]), MODE_FINGERTIP
+        y = joints[INDEX_TIP] - joints[THUMB_TIP]
     u = palm_normal(joints) if approach == "palm" else p - joints[WRIST]
     return GraspTarget(p, gripper_frame(p, y, u), float(np.linalg.norm(y)), mode, len(th), len(nt))
 

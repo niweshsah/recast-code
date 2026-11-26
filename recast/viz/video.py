@@ -23,7 +23,7 @@ FONTS = ["/System/Library/Fonts/HelveticaNeue.ttc", "/usr/share/fonts/truetype/d
 BOLD = ["/System/Library/Fonts/HelveticaNeue.ttc", "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"]
 
 STEPS = [  # (title, subtitle, folder in <run>/viz/steps)
-    ("Text-prompted segmentation", "Masks for the object (red), hand (blue) and arm (orange), tracked through the video",
+    ("Text-prompted segmentation", "Object (red), hand (blue) and arm (orange) masks, tracked through the video",
      "segmentation"),
     ("Hand keypoints (WiLoR)", "21 hand joints located in the image, linked along each finger", "keypoints"),
     ("MANO hand mesh (WiLoR)", "Full hand surface reconstructed from each RGB frame", "mesh"),

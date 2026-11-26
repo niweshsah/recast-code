@@ -20,6 +20,7 @@ import argparse
 import json
 import re
 import tempfile
+import warnings
 from pathlib import Path
 
 import cv2
@@ -43,8 +44,8 @@ def panda_xml(panda_dir: Path) -> str:
     panda_dir = Path(panda_dir).resolve()
     xml = (panda_dir / "panda.xml").read_text()
     xml = re.sub(r'meshdir="([^"]*)"', lambda m: f'meshdir="{panda_dir / m.group(1)}"', xml, count=1)
-    return re.sub(r'(<body name="hand"[^>]*>)',
-                  r'\1<site name="tcp" pos="0 0 %.4f" size="0.002" rgba="0 0 0 0"/>' % TCP_OFFSET, xml, count=1)
+    site = f'<site name="tcp" pos="0 0 {TCP_OFFSET:.4f}" size="0.002" rgba="0 0 0 0"/>'
+    return re.sub(r'(<body name="hand"[^>]*>)', lambda m: m.group(1) + site, xml, count=1)
 
 
 def build_camera_model(panda_dir: Path, T_cam_base: np.ndarray, k: dict):
@@ -191,7 +192,7 @@ def virtual_base(panda_dir: Path, k: dict, targets_cam: list[np.ndarray], floor:
 def static_scene_depth(depths: list[np.ndarray], human: list[np.ndarray], obj: list[np.ndarray]) -> np.ndarray:
     """Per-pixel median depth (m) over frames without the human; object pixels ignored (it moves)."""
     stack = []
-    for dep, hm, om in zip(depths, human, obj):
+    for dep, hm, om in zip(depths, human, obj, strict=True):
         if hm.any():
             continue
         d = dep.astype(np.float32) / 1000.0
@@ -199,7 +200,8 @@ def static_scene_depth(depths: list[np.ndarray], human: list[np.ndarray], obj: l
         stack.append(d)
     if not stack:
         return np.full(depths[0].shape, np.nan, np.float32)
-    with np.errstate(all="ignore"):
+    with warnings.catch_warnings():          # pixels never observed stay NaN (no occlusion there)
+        warnings.simplefilter("ignore", RuntimeWarning)
         return np.nanmedian(np.stack(stack), axis=0)
 
 
@@ -243,7 +245,7 @@ class RobotRenderer:
 
 def render_run(run: Path, panda_dir: Path, T_cam_base: np.ndarray | None = None) -> dict:
     from recast.geometry import backproject
-    from recast.io.clip import Clip, read_mask
+    from recast.io.clip import Clip, frame_path, read_mask
 
     clip = Clip(run / "clip")
     with np.load(run / "actions" / "actions.npz") as f:
@@ -271,7 +273,7 @@ def render_run(run: Path, panda_dir: Path, T_cam_base: np.ndarray | None = None)
     errs, q = {}, None
     joints = np.zeros((len(clip), 7))
     for i, name in enumerate(clip.names):
-        bg = cv2.imread(str(run / "inpainted" / f"{name}.png"))
+        bg = cv2.imread(str(frame_path(run / "inpainted", name)))
         if i in targets_cam:
             p, R = targets_cam[i][:3, 3], targets_cam[i][:3, :3]
             if q is not None:

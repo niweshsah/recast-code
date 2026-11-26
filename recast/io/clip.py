@@ -67,6 +67,15 @@ class Clip:
         return d
 
 
+def frame_path(folder: Path, stem: str) -> Path:
+    """``<folder>/<stem>.png`` or ``.jpg`` (stage outputs may be stored either way)."""
+    for ext in (".png", ".jpg"):
+        p = Path(folder) / f"{stem}{ext}"
+        if p.exists():
+            return p
+    raise FileNotFoundError(Path(folder) / f"{stem}.png")
+
+
 def read_mask(path: Path) -> np.ndarray:
     m = cv2.imread(str(path), cv2.IMREAD_GRAYSCALE)
     if m is None:

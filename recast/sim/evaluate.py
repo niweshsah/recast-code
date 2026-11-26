@@ -111,7 +111,7 @@ class OctoPolicy:
                 logits = self.model.module.apply({"params": self.model.params}, emb, train=False,
                                                  method=lambda m, e, train: m.heads["phase"](e, train=train))
                 phases = np.asarray(logits)[0, -1].argmax(-1).tolist()
-            self.queue = list(zip(chunk, phases))[: self.execute_steps]
+            self.queue = list(zip(chunk, phases, strict=True))[: self.execute_steps]
         a, phase = self.queue.pop(0)
         return a[:6], float(a[6]), phase
 

@@ -146,8 +146,8 @@ def register_to_depth(hand: dict, faces: np.ndarray, depth_mm: np.ndarray, k: di
     vis, _ = visible_vertices(mesh, np.zeros(3))
     init = np.eye(4)
     init[:3, 3] = np.median(pts, axis=0) - np.median(vis, axis=0)
-    res = o3d.pipelines.registration.registration_icp(
-        to_open3d(vis), to_open3d(pts), max_dist, init, o3d.pipelines.registration.TransformationEstimationPointToPoint())
+    point_to_point = o3d.pipelines.registration.TransformationEstimationPointToPoint()
+    res = o3d.pipelines.registration.registration_icp(to_open3d(vis), to_open3d(pts), max_dist, init, point_to_point)
     if res.fitness <= min_fitness:
         return None
     T = np.asarray(res.transformation)

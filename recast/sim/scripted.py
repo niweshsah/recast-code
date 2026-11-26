@@ -5,7 +5,7 @@ contact physics. Not a learned policy. Failure variants reproduce the typical er
     drop      gripper opens part-way through the carry (a fingertip-spacing false release)
     miss      grasp offset perpendicular to the closing axis (fingertip vs contact geometry); jaws close beside it
 
-    MUJOCO_GL=egl python -m recast.sim.scripted --task cube --variant success --video outputs/sim_success.mp4
+    MUJOCO_GL=egl python -m recast.sim.scripted --task cube --variant drop --video outputs/sim_drop.mp4
 """
 
 from __future__ import annotations
@@ -36,7 +36,8 @@ def plan_waypoints(spec: SceneSpec) -> dict[str, np.ndarray]:
     c = np.array([*spec.object_xy, half])
     b = np.array([*spec.box_xy, 0.0])
     up = lambda p, dz: p + np.array([0.0, 0.0, dz])
-    return {"pregrasp": up(c, 0.12), "grasp": np.array([c[0], c[1], max(half + 0.004, MIN_GRASP_Z)]), "lift": up(c, 0.09),
+    grasp = np.array([c[0], c[1], max(half + 0.004, MIN_GRASP_Z)])
+    return {"pregrasp": up(c, 0.12), "grasp": grasp, "lift": up(c, 0.09),
             "above_box": np.array([b[0], b[1], top + half + 0.06]),
             "place": np.array([b[0], b[1], top + half + 0.004]),
             "retreat": np.array([b[0], b[1], top + 2 * half + 0.12])}

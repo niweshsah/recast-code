@@ -9,13 +9,12 @@ Steps: input, segmentation, keypoints, mesh, depth, removal, inpaint, robot.
 from __future__ import annotations
 
 import argparse
-import shutil
 from pathlib import Path
 
 import cv2
 import numpy as np
 
-from recast.io.clip import Clip, read_mask
+from recast.io.clip import Clip, frame_path, read_mask
 
 COLORS = {"hand": (180, 119, 31), "arm": (14, 127, 255), "object": (40, 39, 214)}   # BGR: blue, orange, red
 STEPS = ("input", "segmentation", "keypoints", "mesh", "depth", "removal", "inpaint", "robot")
@@ -51,9 +50,9 @@ def export_steps(run: Path, frames: list[int] | None = None) -> Path:
         cv2.imwrite(str(out / "segmentation" / name), tint(rgb, {k: m[k] for k in COLORS}))
         cv2.imwrite(str(out / "removal" / name), removal_region(rgb, m["hand"], m["arm"], m["remove"]))
         for step, src in sources.items():
-            if (src / name).exists():
-                shutil.copy(src / name, out / step / name)
-            else:  # stage not run (or no output for this frame): show the input
+            try:
+                cv2.imwrite(str(out / step / name), cv2.imread(str(frame_path(src, clip.names[i]))))
+            except FileNotFoundError:  # stage not run (or no output for this frame): show the input
                 cv2.imwrite(str(out / step / name), rgb)
     return out
 

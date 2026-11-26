@@ -52,7 +52,7 @@ def inpaint(run: Path, propainter: Path, mask_dilation: int = 4, subvideo_length
     out.mkdir(parents=True, exist_ok=True)
     k = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2 * mask_dilation + 7, 2 * mask_dilation + 7))
     diffs = []
-    for i, (name, p) in enumerate(zip(clip.names, produced)):
+    for i, (name, p) in enumerate(zip(clip.names, produced, strict=True)):
         res = cv2.imread(str(p))
         cv2.imwrite(str(out / f"{name}.png"), res)
         m = cv2.dilate(cv2.imread(str(masks / f"{name}.png"), cv2.IMREAD_GRAYSCALE), k) > 127

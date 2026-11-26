@@ -207,7 +207,8 @@ def main() -> None:
     a = ap.parse_args()
     meta = export_clip(a.bag, a.first, a.last, a.out)
     s = meta["source"]
-    print(f"{s['bag']}: {s['n_frames']} frames at {s['fps']:.1f} fps, depth skew median {s['median_abs_skew_ms']:.1f} ms")
+    print(f"{s['bag']}: {s['n_frames']} frames at {s['fps']:.1f} fps, "
+          f"depth skew median {s['median_abs_skew_ms']:.1f} ms")
 
 
 if __name__ == "__main__":
