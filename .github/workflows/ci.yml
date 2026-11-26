@@ -6,6 +6,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v3
-      - run: uv venv -p 3.11 && uv pip install -e ".[sim,dev]"
+      - run: sudo apt-get update && sudo apt-get install -y libosmesa6-dev
+      - run: ./scripts/setup_gpu.sh --menagerie-only
+      - run: uv venv -p 3.11 && uv pip install -e ".[sim,dev]" scipy
       - run: uv run ruff check recast tests
-      - run: MUJOCO_GL=egl uv run pytest -q -m "not gpu"
+      - run: MUJOCO_GL=osmesa PYOPENGL_PLATFORM=osmesa uv run pytest -q -m "not gpu"
